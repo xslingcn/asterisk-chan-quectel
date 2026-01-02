@@ -532,12 +532,19 @@ EXPORT_DEF int at_enqueue_dial(struct cpvt *cpvt, const char *number, int clir)
 		ATQ_CMD_INIT_DYNI(cmds[cmdsno], CMD_AT_CLIR);
 		cmdsno++;
 	}
-        if (pvt->is_simcom) {
-	err = at_fill_generic_cmd(&cmds[cmdsno], "AT+CPCMREG=0;D%s;\r", number); }
-        else if (strcmp(CONF_UNIQ(pvt, quec_uac),"1") == 0) {
-        err = at_fill_generic_cmd(&cmds[cmdsno], "AT+QPCMV=0;+QPCMV=1,2;D%s;\r", number); }
-        else {
-        err = at_fill_generic_cmd(&cmds[cmdsno], "AT+QPCMV=0;+QPCMV=1,0;D%s;\r", number); }
+	if (pvt->is_simcom && strcmp(CONF_UNIQ(pvt, quec_uac), "1") == 0) {
+		/* SIMCom + UAC mode: no CPCMREG needed */
+		err = at_fill_generic_cmd(&cmds[cmdsno], "ATD%s;\r", number);
+	} else if (pvt->is_simcom) {
+		/* SIMCom + PCM audio mode */
+		err = at_fill_generic_cmd(&cmds[cmdsno], "AT+CPCMREG=0;D%s;\r", number);
+	} else if (strcmp(CONF_UNIQ(pvt, quec_uac), "1") == 0) {
+		/* Quectel + UAC mode */
+		err = at_fill_generic_cmd(&cmds[cmdsno], "AT+QPCMV=0;+QPCMV=1,2;D%s;\r", number);
+	} else {
+		/* Quectel + PCM audio mode */
+		err = at_fill_generic_cmd(&cmds[cmdsno], "AT+QPCMV=0;+QPCMV=1,0;D%s;\r", number);
+	}
 	if(err)
 	{
 		ast_free(tmp);
@@ -583,13 +590,19 @@ EXPORT_DEF int at_enqueue_answer(struct cpvt *cpvt)
 	if(cpvt->state == CALL_STATE_INCOMING)
 	{
 /* FIXME: channel number? */
-             if (pvt->is_simcom) {
-		cmd1 = "AT+CPCMREG=0;A\r"; }
-             else if (strcmp(CONF_UNIQ(pvt, quec_uac),"1") == 0) { 
-                cmd1 = "AT+QPCMV=0;+QPCMV=1,2;A\r"; }
-             else { 
-                cmd1 = "AT+QPCMV=0;+QPCMV=1,0;A\r"; }
-
+		if (pvt->is_simcom && strcmp(CONF_UNIQ(pvt, quec_uac), "1") == 0) {
+			/* SIMCom + UAC mode: no CPCMREG needed */
+			cmd1 = "ATA\r";
+		} else if (pvt->is_simcom) {
+			/* SIMCom + PCM audio mode */
+			cmd1 = "AT+CPCMREG=0;A\r";
+		} else if (strcmp(CONF_UNIQ(pvt, quec_uac), "1") == 0) {
+			/* Quectel + UAC mode */
+			cmd1 = "AT+QPCMV=0;+QPCMV=1,2;A\r";
+		} else {
+			/* Quectel + PCM audio mode */
+			cmd1 = "AT+QPCMV=0;+QPCMV=1,0;A\r";
+		}
 	}
 	else if(cpvt->state == CALL_STATE_WAITING)
 	{

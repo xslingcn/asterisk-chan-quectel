@@ -142,23 +142,32 @@ EXPORT_DEF struct cpvt * active_cpvt(struct pvt * pvt)
 
 EXPORT_DEF void voice_enable(struct pvt * pvt)
 {
-                                static const char cmd_atvoice[] = "AT+CPCMREG=1\r";
-                                static const at_queue_cmd_t cmds1[] = {
-		                ATQ_CMD_DECLARE_STIT(CMD_AT_DDSETEX, cmd_atvoice, ATQ_CMD_TIMEOUT_MEDIUM, 0),
-		                                                       }; 
-	                        at_queue_insert_const(&pvt->sys_chan, cmds1, ITEMS_OF(cmds1), 1);  
+	/* UAC mode: skip CPCMREG command, audio is handled via ALSA */
+	if (strcmp(CONF_UNIQ(pvt, quec_uac), "1") == 0) {
+		ast_debug(1, "[%s] UAC mode enabled, skipping AT+CPCMREG=1\n", PVT_ID(pvt));
+		return;
+	}
 
+	static const char cmd_atvoice[] = "AT+CPCMREG=1\r";
+	static const at_queue_cmd_t cmds1[] = {
+		ATQ_CMD_DECLARE_STIT(CMD_AT_DDSETEX, cmd_atvoice, ATQ_CMD_TIMEOUT_MEDIUM, 0),
+	};
+	at_queue_insert_const(&pvt->sys_chan, cmds1, ITEMS_OF(cmds1), 1);
 }
 
 EXPORT_DEF void voice_disable(struct pvt * pvt)
 {
+	/* UAC mode: skip CPCMREG command, audio is handled via ALSA */
+	if (strcmp(CONF_UNIQ(pvt, quec_uac), "1") == 0) {
+		ast_debug(1, "[%s] UAC mode enabled, skipping AT+CPCMREG=0\n", PVT_ID(pvt));
+		return;
+	}
 
-                                static const char cmd_atvoice[] = "AT+CPCMREG=0\r";
-                                static const at_queue_cmd_t cmds1[] = {
-		                ATQ_CMD_DECLARE_STIT(CMD_AT_DDSETEX0, cmd_atvoice, ATQ_CMD_TIMEOUT_MEDIUM, 0),
-		                                                       };
-	                        at_queue_insert_const(&pvt->sys_chan, cmds1, ITEMS_OF(cmds1), 1);  
-
+	static const char cmd_atvoice[] = "AT+CPCMREG=0\r";
+	static const at_queue_cmd_t cmds1[] = {
+		ATQ_CMD_DECLARE_STIT(CMD_AT_DDSETEX0, cmd_atvoice, ATQ_CMD_TIMEOUT_MEDIUM, 0),
+	};
+	at_queue_insert_const(&pvt->sys_chan, cmds1, ITEMS_OF(cmds1), 1);
 }
 
 #/* */
