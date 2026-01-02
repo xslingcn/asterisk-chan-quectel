@@ -125,14 +125,15 @@ EXPORT_DEF char* at_parse_cops (char* str)
 }
 
 /*!
- * \brief Parse a CREG response
+ * \brief Parse a CREG/CEREG/C5GREG response
  * \param str -- string to parse (null terminated)
  * \param len -- string lenght
  * \param gsm_reg -- a pointer to a int
  * \param gsm_reg_status -- a pointer to a int
- * \param lac -- a pointer to a char pointer which will store the location area code in hex format
+ * \param lac -- a pointer to a char pointer which will store the location area code (or TAC for LTE/5G) in hex format
  * \param ci  -- a pointer to a char pointer which will store the cell id in hex format
- * @note str will be modified when the CREG message is parsed
+ * @note str will be modified when the message is parsed
+ * @note This function works for +CREG (2G/3G), +CEREG (4G LTE), and +C5GREG (5G NR)
  * \retval  0 success
  * \retval -1 parse error
  */
@@ -152,8 +153,10 @@ EXPORT_DEF int at_parse_creg (char* str, unsigned len, int* gsm_reg, int* gsm_re
 	*ci  = NULL;
 
 	/*
-	 * parse CREG response in the following format:
-	 * +CREG: [<p1>,]<p2>[,<p3>,<p4>]
+	 * parse CREG/CEREG/C5GREG response in the following format:
+	 * +CREG: [<n>,]<stat>[,<lac>,<ci>]
+	 * +CEREG: [<n>,]<stat>[,<tac>,<ci>]
+	 * +C5GREG: [<n>,]<stat>[,<tac>,<ci>]
 	 */
 
 	for (i = 0, state = 0; i < len && state < 9; i++)

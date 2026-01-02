@@ -215,6 +215,22 @@ static int at_response_ok (struct pvt* pvt, at_res_t res)
 				ast_debug (1, "[%s] registration query sent\n", PVT_ID(pvt));
 				break;
 
+			case CMD_AT_CEREG_INIT:
+				ast_debug (1, "[%s] LTE registration info enabled\n", PVT_ID(pvt));
+				break;
+
+			case CMD_AT_CEREG:
+				ast_debug (1, "[%s] LTE registration query sent\n", PVT_ID(pvt));
+				break;
+
+			case CMD_AT_C5GREG_INIT:
+				ast_debug (1, "[%s] 5G NR registration info enabled\n", PVT_ID(pvt));
+				break;
+
+			case CMD_AT_C5GREG:
+				ast_debug (1, "[%s] 5G NR registration query sent\n", PVT_ID(pvt));
+				break;
+
 			case CMD_AT_CNUM:
 				ast_debug (1, "[%s] Subscriber phone number query successed\n", PVT_ID(pvt));
 				break;
@@ -483,6 +499,22 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 
 			case CMD_AT_CREG:
 				ast_debug (1, "[%s] Error getting registration info\n", PVT_ID(pvt));
+				break;
+
+			case CMD_AT_CEREG_INIT:
+				ast_debug (1, "[%s] Error enabling LTE registration info (not supported)\n", PVT_ID(pvt));
+				break;
+
+			case CMD_AT_CEREG:
+				ast_debug (1, "[%s] Error getting LTE registration info\n", PVT_ID(pvt));
+				break;
+
+			case CMD_AT_C5GREG_INIT:
+				ast_debug (1, "[%s] Error enabling 5G NR registration info (not supported)\n", PVT_ID(pvt));
+				break;
+
+			case CMD_AT_C5GREG:
+				ast_debug (1, "[%s] Error getting 5G NR registration info\n", PVT_ID(pvt));
 				break;
 
 			case CMD_AT_CVOICE:
@@ -1861,12 +1893,14 @@ static int at_response_cops (struct pvt* pvt, char* str)
 }
 
 /*!
- * \brief Handle +CREG response Here we get the GSM registration status
+ * \brief Handle +CREG/+CEREG/+C5GREG response Here we get the network registration status
  * \param pvt -- pvt structure
  * \param str -- string containing response (null terminated)
  * \param len -- string lenght
  * \retval  0 success
  * \retval -1 error
+ * \note This function handles 2G/3G (CREG), 4G LTE (CEREG), and 5G NR (C5GREG) registration.
+ *       If any network is registered, gsm_registered is set to 1.
  */
 
 static int at_response_creg (struct pvt* pvt, char* str, size_t len)
@@ -1882,7 +1916,7 @@ static int at_response_creg (struct pvt* pvt, char* str, size_t len)
 
 	if (at_parse_creg (str, len, &d, &pvt->gsm_reg_status, &lac, &ci))
 	{
-		ast_verb (1, "[%s] Error parsing CREG: '%.*s'\n", PVT_ID(pvt), (int) len, str);
+		ast_verb (1, "[%s] Error parsing registration response: '%.*s'\n", PVT_ID(pvt), (int) len, str);
 		return 0;
 	}
 
@@ -1896,11 +1930,8 @@ static int at_response_creg (struct pvt* pvt, char* str, size_t len)
 		pvt->gsm_registered = 1;
 		manager_event_device_status(PVT_ID(pvt), "Register");
 	}
-	else
-	{
-		pvt->gsm_registered = 0;
-		manager_event_device_status(PVT_ID(pvt), "Unregister");
-	}
+	/* Note: We don't set gsm_registered to 0 here because another network (2G/3G/4G/5G) 
+	 * might still be registered. The device is considered registered if ANY network is available. */
 
 	if (lac)
 	{
@@ -2114,6 +2145,8 @@ int at_response (struct pvt* pvt, const struct iovec iov[2], int iovcnt, at_res_
 				return at_response_conn (pvt, str);
 
 			case RES_CREG:
+			case RES_CEREG:
+			case RES_C5GREG:
 				/* An error here is not fatal. Just keep going. */
 				at_response_creg (pvt, str, len);
 				return 0;
