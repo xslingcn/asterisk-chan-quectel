@@ -857,6 +857,9 @@ e_return:
 	} else if (r == -ESTRPIPE) {
 		ast_log(LOG_ERROR, "-ESTRPIPE\n");
 		snd_pcm_prepare(pvt->icard);
+	} else if (r == -EAGAIN) {
+		/* Non-blocking I/O: no data available yet, this is normal */
+		ast_debug(3, "[%s] ALSA read: no data available (EAGAIN)\n", PVT_ID(pvt));
 	} else if (r < 0) {
 		ast_log(LOG_ERROR, "Read error: %s\n", snd_strerror(r));
 	}
