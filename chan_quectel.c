@@ -1908,9 +1908,9 @@ static int public_state_init(struct public_state * state)
 			if (!(channel_tech.capabilities = ast_format_cap_alloc(AST_FORMAT_CAP_FLAG_DEFAULT))) {
 				return AST_MODULE_LOAD_FAILURE;
 			}
-			ast_format_cap_append(channel_tech.capabilities, ast_format_slin, 0);
+			ast_format_cap_append(channel_tech.capabilities, ast_format_slin16, 0);
 #elif ASTERISK_VERSION_NUM >= 100000 /* 10-13 */
-			ast_format_set(&chan_quectel_format, AST_FORMAT_SLINEAR, 0);
+			ast_format_set(&chan_quectel_format, AST_FORMAT_SLINEAR16, 0);
 # if ASTERISK_VERSION_NUM >= 120000 /* 12+ */
 			if (!(channel_tech.capabilities = ast_format_cap_alloc(0))) {
 				return AST_MODULE_LOAD_FAILURE;

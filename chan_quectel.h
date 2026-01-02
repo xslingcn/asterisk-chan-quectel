@@ -27,8 +27,8 @@
 #include "at_command.h"
 
 #include <alsa/asoundlib.h>
-#define PERIOD_FRAMES           80
-#define DESIRED_RATE 8000
+#define PERIOD_FRAMES           160
+#define DESIRED_RATE 16000
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
 #include <fcntl.h>

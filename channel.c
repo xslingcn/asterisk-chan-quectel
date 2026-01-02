@@ -155,7 +155,7 @@ static struct ast_channel * channel_request(
 	}
 
 #if ASTERISK_VERSION_NUM >= 130000 /* 13+ */
-	if (ast_format_cap_iscompatible_format(cap, ast_format_slin) != AST_FORMAT_CMP_EQUAL)
+	if (ast_format_cap_iscompatible_format(cap, ast_format_slin16) != AST_FORMAT_CMP_EQUAL)
 	{
 		struct ast_str *codec_buf = ast_str_alloca(64);
 		ast_log(LOG_WARNING, "Asked to get a channel of unsupported format '%s'\n",
@@ -174,7 +174,7 @@ static struct ast_channel * channel_request(
 	}
 #else /* 10- */
 	oldformat = format;
-	format &= AST_FORMAT_SLINEAR;
+	format &= AST_FORMAT_SLINEAR16;
 	if (!format)
 	{
 #if ASTERISK_VERSION_NUM >= 10800 /* 1.8+ */
@@ -711,11 +711,11 @@ static struct ast_frame* channel_read (struct ast_channel* channel)
 
 		cpvt->a_read_frame.frametype = AST_FRAME_VOICE;
 #if ASTERISK_VERSION_NUM >= 130000 /* 13+ */
-		cpvt->a_read_frame.subclass.format = ast_format_slin;
+		cpvt->a_read_frame.subclass.format = ast_format_slin16;
 #elif ASTERISK_VERSION_NUM >= 100000 /* 10-13 */
 		ast_format_copy(&cpvt->a_read_frame.subclass.format, &chan_quectel_format);
 #else /* 10- */
-		cpvt->a_read_frame.subclass_codec = AST_FORMAT_SLINEAR;
+		cpvt->a_read_frame.subclass_codec = AST_FORMAT_SLINEAR16;
 #endif /* ^10- */
 		cpvt->a_read_frame.data.ptr = cpvt->a_read_buf + AST_FRIENDLY_OFFSET;
 		cpvt->a_read_frame.offset = AST_FRIENDLY_OFFSET;
@@ -881,7 +881,7 @@ e_return:
 		}
 #endif
 		f.frametype = AST_FRAME_VOICE;
-		f.subclass.format = ast_format_slin;
+		f.subclass.format = ast_format_slin16;
 		f.samples = FRAME_SIZE2;
 		f.datalen = FRAME_SIZE2 * 2;
 		f.data.ptr = buf;
@@ -959,13 +959,13 @@ static int channel_write (struct ast_channel* channel, struct ast_frame* f)
 	struct pvt* pvt;
 #if ASTERISK_VERSION_NUM >= 130000 /* 13+ */
 	if (f->frametype != AST_FRAME_VOICE
-			|| ast_format_cmp(f->subclass.format, ast_format_slin) != AST_FORMAT_CMP_EQUAL)
+			|| ast_format_cmp(f->subclass.format, ast_format_slin16) != AST_FORMAT_CMP_EQUAL)
 #elif ASTERISK_VERSION_NUM >= 100000 /* 10-13 */
 	if (f->frametype != AST_FRAME_VOICE
-			|| f->subclass.format.id != AST_FORMAT_SLINEAR)
+			|| f->subclass.format.id != AST_FORMAT_SLINEAR16)
 #else /* 10- */
 	if (f->frametype != AST_FRAME_VOICE
-			|| f->subclass_codec != AST_FORMAT_SLINEAR)
+			|| f->subclass_codec != AST_FORMAT_SLINEAR16)
 #endif /* ^10- */
 	{
 		return 0;
@@ -1488,10 +1488,10 @@ EXPORT_DEF struct ast_channel* new_channel(
 
 #if ASTERISK_VERSION_NUM >= 130000 /* 13+ */
 			ast_channel_nativeformats_set(channel, channel_tech.capabilities);
-			ast_channel_set_rawreadformat(channel, ast_format_slin);
-			ast_channel_set_rawwriteformat(channel, ast_format_slin);
-			ast_channel_set_writeformat(channel, ast_format_slin);
-			ast_channel_set_readformat(channel, ast_format_slin);
+			ast_channel_set_rawreadformat(channel, ast_format_slin16);
+			ast_channel_set_rawwriteformat(channel, ast_format_slin16);
+			ast_channel_set_writeformat(channel, ast_format_slin16);
+			ast_channel_set_readformat(channel, ast_format_slin16);
 #elif ASTERISK_VERSION_NUM >= 110000 /* 11+ */
 		        ast_format_cap_add(ast_channel_nativeformats(channel), &chan_quectel_format);
 		        ast_format_copy(ast_channel_rawreadformat(channel), &chan_quectel_format);
@@ -1505,11 +1505,11 @@ EXPORT_DEF struct ast_channel* new_channel(
 		        ast_format_copy(&channel->writeformat, &chan_quectel_format);
 		        ast_format_copy(&channel->readformat, &chan_quectel_format);
 #else /* 10- */
-			channel->nativeformats	= AST_FORMAT_SLINEAR;
-			channel->rawreadformat	= AST_FORMAT_SLINEAR;
-			channel->rawwriteformat	= AST_FORMAT_SLINEAR;
-			channel->readformat	= AST_FORMAT_SLINEAR;
-			channel->writeformat	= AST_FORMAT_SLINEAR;
+			channel->nativeformats	= AST_FORMAT_SLINEAR16;
+			channel->rawreadformat	= AST_FORMAT_SLINEAR16;
+			channel->rawwriteformat	= AST_FORMAT_SLINEAR16;
+			channel->readformat	= AST_FORMAT_SLINEAR16;
+			channel->writeformat	= AST_FORMAT_SLINEAR16;
 #endif /* ^10- */
 
 			if (ast_state == AST_STATE_RING)
@@ -1783,7 +1783,7 @@ EXPORT_DEF struct ast_channel_tech channel_tech =
 	.type			= "Quectel",
 	.description		= MODULE_DESCRIPTION,
 #if ASTERISK_VERSION_NUM < 100000 /* 10- */
-	.capabilities		= AST_FORMAT_SLINEAR,
+	.capabilities		= AST_FORMAT_SLINEAR16,
 #endif /* ^10- */
 	.requester		= channel_request,
 	.call			= channel_call,
